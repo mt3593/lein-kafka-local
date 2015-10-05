@@ -44,7 +44,7 @@
          (io/make-parents (str kafka-directory "/kafka.tar.gz"))
          (let [local-kafka (str kafka-directory "/kafka.tar.gz")]
            (io/copy (io/file "test/resources/test.tar.gz") (io/file local-kafka))
-           (unpack-tgz-file local-kafka)
+           (unpack-tgz-file local-kafka kafka-directory)
            (exists (str kafka-directory "/dir1")) => true
            (exists (str kafka-directory "/dir1/file1.txt")) => true
            (slurp (str kafka-directory "/dir1/file1.txt")) => "hello\n"
@@ -69,7 +69,32 @@
         (env :scala-version) => "3.9.1"
         (env :kafka-version) => "0.8.1.1"))
 
- (comment with-state-changes
+ (with-state-changes
    [(before :contents (-> kafka-download
                           download-kafka
-                          unpack-tgz-file))]))
+                          (unpack-tgz-file kafka-directory)
+                          get-root
+                          make-files-in-bin-executable))]
+
+   (with-state-changes
+     [(after :facts (do
+                    (stop-zookeeper)
+                    (stop-kafka)))]
+
+     (fact "Startup zookeeper - no exception should be thrown"
+           (start-zookeeper (get-root kafka-directory)))
+
+     (fact "Startup kafka - no exception should be thrown"
+           (start-kafka (get-root kafka-directory))))
+
+   (with-state-changes
+     [(before :facts (do
+                       (start-zookeeper)
+                       (start-kafka)))
+      (after :facts (do
+                    (stop-zookeeper)
+                    (stop-kafka)))]
+
+     (future-fact "create topic")))
+
+ (future-fact "topics are created and I can read/write to the topic - end to end test needed so should call the main function"))
