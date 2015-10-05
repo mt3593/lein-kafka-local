@@ -15,4 +15,6 @@
 
   :plugins [[lein-environ "0.5.0"]]
 
-  :env {:kafka-download-url "http://apache.mirror.anlx.net/kafka/0.8.2.1/kafka_2.9.1-0.8.2.1.tgz"})
+  :env {:kafka-download-url "http://apache.mirror.anlx.net/kafka/%s/kafka_%s-%s.tgz"
+        :scala-version "2.9.1"
+        :kafka-version "0.8.2.1"})

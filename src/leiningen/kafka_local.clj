@@ -3,14 +3,19 @@
             [environ.core :refer [env]]
             [leiningen.core.main :as main])
   (:import [java.io
+            File
             BufferedInputStream
             FileInputStream]
+           [java.util.regex Pattern]
            [org.apache.commons.compress.archivers.tar
             TarArchiveInputStream]
            [org.apache.commons.compress.compressors.gzip
             GzipCompressorInputStream]))
 
-(def kafka-download (env :kafka-download-url))
+(def kafka-download (format (env :kafka-download-url)
+                            (env :kafka-version)
+                            (env :scala-version)
+                            (env :kafka-version)))
 
 (def kafka-directory (str (System/getProperty "user.home") File/separator ".lein-kafka-local"))
 
@@ -40,3 +45,12 @@
                 (.read tar-input-stream data 0 size)
                 (.write file-output data 0 size)))))
         (recur (.getNextTarEntry tar-input-stream))))))
+
+(defn get-root
+  [path]
+  (some->> path
+           io/file
+           .list
+           (filter (partial re-matches (Pattern/compile (format "kafka_%s-%s" (env :scala-version) (env :kafka-version)))))
+           first
+           (str path "/")))
