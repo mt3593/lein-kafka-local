@@ -99,3 +99,15 @@
 (defn stop-kafka
   []
   (stop-process kafka-running))
+
+
+(defn create-topic
+  [root-path topic]
+  (let [p (ref false)
+        command (format "%s/bin/kafka-topics.sh --zookeeper localhost:2181 --create --topic %s --partitions 1 --replication-factor 1"
+                        root-path
+                        topic)
+        _ (start-process command p)
+        exit-value (.exitValue @p)]
+    (stop-process p)
+    exit-value))

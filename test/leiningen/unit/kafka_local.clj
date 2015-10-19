@@ -88,13 +88,14 @@
            (start-kafka (get-root kafka-directory))))
 
    (with-state-changes
-     [(before :facts (do
-                       (start-zookeeper)
-                       (start-kafka)))
+     [(before :facts (let [local-kafka (get-root kafka-directory)]
+                       (start-zookeeper local-kafka)
+                       (start-kafka local-kafka)))
       (after :facts (do
                     (stop-zookeeper)
                     (stop-kafka)))]
 
-     (future-fact "create topic")))
+     (fact "create topic"
+           (create-topic (get-root kafka-directory) "test") => 0)))
 
  (future-fact "topics are created and I can read/write to the topic - end to end test needed so should call the main function"))
